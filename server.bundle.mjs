@@ -65,38 +65,38 @@ var rR=Object.create;var nl=Object.defineProperty;var oR=Object.getOwnPropertyDe
          bytes_avoided, bytes_returned,
          source_hook, data_hash
        )
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),e(M.getEvents,`SELECT id, session_id, type, category, priority, data,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),e(D.getEvents,`SELECT id, session_id, type, category, priority, data,
               project_dir, attribution_source, attribution_confidence,
               bytes_avoided, bytes_returned,
               source_hook, created_at, data_hash
-       FROM session_events WHERE session_id = ? ORDER BY id ASC LIMIT ?`),e(M.getEventsByType,`SELECT id, session_id, type, category, priority, data,
+       FROM session_events WHERE session_id = ? ORDER BY id ASC LIMIT ?`),e(D.getEventsByType,`SELECT id, session_id, type, category, priority, data,
               project_dir, attribution_source, attribution_confidence,
               bytes_avoided, bytes_returned,
               source_hook, created_at, data_hash
-       FROM session_events WHERE session_id = ? AND type = ? ORDER BY id ASC LIMIT ?`),e(M.getEventsByPriority,`SELECT id, session_id, type, category, priority, data,
+       FROM session_events WHERE session_id = ? AND type = ? ORDER BY id ASC LIMIT ?`),e(D.getEventsByPriority,`SELECT id, session_id, type, category, priority, data,
               project_dir, attribution_source, attribution_confidence,
               bytes_avoided, bytes_returned,
               source_hook, created_at, data_hash
-       FROM session_events WHERE session_id = ? AND priority >= ? ORDER BY id ASC LIMIT ?`),e(M.getEventsByTypeAndPriority,`SELECT id, session_id, type, category, priority, data,
+       FROM session_events WHERE session_id = ? AND priority >= ? ORDER BY id ASC LIMIT ?`),e(D.getEventsByTypeAndPriority,`SELECT id, session_id, type, category, priority, data,
               project_dir, attribution_source, attribution_confidence,
               bytes_avoided, bytes_returned,
               source_hook, created_at, data_hash
-       FROM session_events WHERE session_id = ? AND type = ? AND priority >= ? ORDER BY id ASC LIMIT ?`),e(M.getEventCount,"SELECT COUNT(*) AS cnt FROM session_events WHERE session_id = ?"),e(M.getLatestAttributedProject,`SELECT project_dir
+       FROM session_events WHERE session_id = ? AND type = ? AND priority >= ? ORDER BY id ASC LIMIT ?`),e(D.getEventCount,"SELECT COUNT(*) AS cnt FROM session_events WHERE session_id = ?"),e(D.getLatestAttributedProject,`SELECT project_dir
        FROM session_events
        WHERE session_id = ? AND project_dir != ''
        ORDER BY id DESC
-       LIMIT 1`),e(M.checkDuplicate,`SELECT 1 FROM (
+       LIMIT 1`),e(D.checkDuplicate,`SELECT 1 FROM (
          SELECT type, data_hash FROM session_events
          WHERE session_id = ? ORDER BY id DESC LIMIT ?
        ) AS recent
        WHERE recent.type = ? AND recent.data_hash = ?
-       LIMIT 1`),e(M.evictLowestPriority,`DELETE FROM session_events WHERE id = (
+       LIMIT 1`),e(D.evictLowestPriority,`DELETE FROM session_events WHERE id = (
          SELECT id FROM session_events WHERE session_id = ?
          ORDER BY priority ASC, id ASC LIMIT 1
-       )`),e(M.updateMetaLastEvent,`UPDATE session_meta
+       )`),e(D.updateMetaLastEvent,`UPDATE session_meta
        SET last_event_at = datetime('now'), event_count = event_count + 1
-       WHERE session_id = ?`),e(M.ensureSession,"INSERT OR IGNORE INTO session_meta (session_id, project_dir) VALUES (?, ?)"),e(M.getSessionStats,`SELECT session_id, project_dir, started_at, last_event_at, event_count, compact_count
-       FROM session_meta WHERE session_id = ?`),e(M.getSessionRollup,`SELECT
+       WHERE session_id = ?`),e(D.ensureSession,"INSERT OR IGNORE INTO session_meta (session_id, project_dir) VALUES (?, ?)"),e(D.getSessionStats,`SELECT session_id, project_dir, started_at, last_event_at, event_count, compact_count
+       FROM session_meta WHERE session_id = ?`),e(D.getSessionRollup,`SELECT
          COUNT(*) AS tool_calls,
          COALESCE(SUM(CASE WHEN category = 'error' THEN 1 ELSE 0 END), 0) AS errors,
          COUNT(DISTINCT type) AS unique_tools,
@@ -107,23 +107,23 @@ var rR=Object.create;var nl=Object.defineProperty;var oR=Object.getOwnPropertyDe
          CAST(COALESCE(SUM(bytes_avoided) / 1024.0, 0) AS INTEGER) AS total_chunks,
          COALESCE(SUM(CASE WHEN type IN ('file_search', 'file_glob') THEN 1 ELSE 0 END), 0) AS search_queries
        FROM session_events
-       WHERE session_id = ?`),e(M.getMaxFileEdits,`SELECT COALESCE(MAX(c), 0) AS max_file_edits
+       WHERE session_id = ?`),e(D.getMaxFileEdits,`SELECT COALESCE(MAX(c), 0) AS max_file_edits
        FROM (
          SELECT COUNT(*) AS c
          FROM session_events
          WHERE session_id = ? AND category = 'file' AND type IN ('file_edit', 'file_write')
          GROUP BY data
-       )`),e(M.getLatestCommitMessage,`SELECT data
+       )`),e(D.getLatestCommitMessage,`SELECT data
        FROM session_events
        WHERE session_id = ? AND type = 'git_commit'
        ORDER BY id DESC
-       LIMIT 1`),e(M.incrementCompactCount,"UPDATE session_meta SET compact_count = compact_count + 1 WHERE session_id = ?"),e(M.getUsageCursor,"SELECT usage_cursor FROM session_meta WHERE session_id = ?"),e(M.setUsageCursor,"UPDATE session_meta SET usage_cursor = ? WHERE session_id = ?"),e(M.upsertResume,`INSERT INTO session_resume (session_id, snapshot, event_count)
+       LIMIT 1`),e(D.incrementCompactCount,"UPDATE session_meta SET compact_count = compact_count + 1 WHERE session_id = ?"),e(D.getUsageCursor,"SELECT usage_cursor FROM session_meta WHERE session_id = ?"),e(D.setUsageCursor,"UPDATE session_meta SET usage_cursor = ? WHERE session_id = ?"),e(D.upsertResume,`INSERT INTO session_resume (session_id, snapshot, event_count)
        VALUES (?, ?, ?)
        ON CONFLICT(session_id) DO UPDATE SET
          snapshot = excluded.snapshot,
          event_count = excluded.event_count,
          created_at = datetime('now'),
-         consumed = 0`),e(M.getResume,"SELECT snapshot, event_count, consumed FROM session_resume WHERE session_id = ?"),e(M.markResumeConsumed,"UPDATE session_resume SET consumed = 1 WHERE session_id = ?"),e(M.claimLatestUnconsumedResume,`UPDATE session_resume
+         consumed = 0`),e(D.getResume,"SELECT snapshot, event_count, consumed FROM session_resume WHERE session_id = ?"),e(D.markResumeConsumed,"UPDATE session_resume SET consumed = 1 WHERE session_id = ?"),e(D.claimLatestUnconsumedResume,`UPDATE session_resume
        SET consumed = 1
        WHERE id = (
          SELECT id FROM session_resume
@@ -132,21 +132,21 @@ var rR=Object.create;var nl=Object.defineProperty;var oR=Object.getOwnPropertyDe
          ORDER BY created_at DESC, id DESC
          LIMIT 1
        )
-       RETURNING session_id, snapshot`),e(M.deleteEvents,"DELETE FROM session_events WHERE session_id = ?"),e(M.deleteMeta,"DELETE FROM session_meta WHERE session_id = ?"),e(M.deleteResume,"DELETE FROM session_resume WHERE session_id = ?"),e(M.searchEvents,`SELECT id, session_id, category, type, data, created_at
+       RETURNING session_id, snapshot`),e(D.deleteEvents,"DELETE FROM session_events WHERE session_id = ?"),e(D.deleteMeta,"DELETE FROM session_meta WHERE session_id = ?"),e(D.deleteResume,"DELETE FROM session_resume WHERE session_id = ?"),e(D.searchEvents,`SELECT id, session_id, category, type, data, created_at
        FROM session_events
        WHERE (project_dir = ? OR project_dir = '')
          AND (data LIKE '%' || ? || '%' ESCAPE '\\' OR category LIKE '%' || ? || '%' ESCAPE '\\')
          AND (? IS NULL OR category = ?)
        ORDER BY id ASC
-       LIMIT ?`),e(M.getOldSessions,"SELECT session_id FROM session_meta WHERE started_at < datetime('now', ? || ' days')"),e(M.incrementToolCall,`INSERT INTO tool_calls (session_id, tool, calls, bytes_returned)
+       LIMIT ?`),e(D.getOldSessions,"SELECT session_id FROM session_meta WHERE started_at < datetime('now', ? || ' days')"),e(D.incrementToolCall,`INSERT INTO tool_calls (session_id, tool, calls, bytes_returned)
        VALUES (?, ?, 1, ?)
        ON CONFLICT(session_id, tool) DO UPDATE SET
          calls = calls + 1,
          bytes_returned = bytes_returned + excluded.bytes_returned,
-         updated_at = datetime('now')`),e(M.getToolCallTotals,`SELECT COALESCE(SUM(calls), 0) AS calls,
+         updated_at = datetime('now')`),e(D.getToolCallTotals,`SELECT COALESCE(SUM(calls), 0) AS calls,
               COALESCE(SUM(bytes_returned), 0) AS bytes_returned
-       FROM tool_calls WHERE session_id = ?`),e(M.getToolCallByTool,`SELECT tool, calls, bytes_returned
-       FROM tool_calls WHERE session_id = ? ORDER BY calls DESC`),e(M.getEventBytesSummary,`SELECT COALESCE(SUM(bytes_avoided), 0) AS bytes_avoided,
+       FROM tool_calls WHERE session_id = ?`),e(D.getToolCallByTool,`SELECT tool, calls, bytes_returned
+       FROM tool_calls WHERE session_id = ? ORDER BY calls DESC`),e(D.getEventBytesSummary,`SELECT COALESCE(SUM(bytes_avoided), 0) AS bytes_avoided,
               COALESCE(SUM(bytes_returned), 0) AS bytes_returned
        FROM session_events WHERE session_id = ?`)}insertEvent(e,n,r="PostToolUse",o,s){let i=Di("sha256").update(n.data).digest("hex").slice(0,16).toUpperCase(),a=String(o?.projectDir??n.project_dir??this._getSessionProjectDir(e)).trim(),c=String(o?.source??n.attribution_source??"unknown"),u=Number(o?.confidence??n.attribution_confidence??0),l=Number.isFinite(u)?Math.max(0,Math.min(1,u)):0,d=tu(s?.bytesAvoided),f=tu(s?.bytesReturned),m=this.db.transaction(()=>{if(this.stmt(M.checkDuplicate).get(e,Iv,n.type,i))return;this.stmt(M.getEventCount).get(e).cnt>=Ov&&this.stmt(M.evictLowestPriority).run(e),this.stmt(M.insertEvent).run(e,n.type,n.category,n.priority,n.data,a,c,l,d,f,r,i),this.stmt(M.updateMetaLastEvent).run(e)});this.withRetry(()=>m())}bulkInsertEvents(e,n,r="PostToolUse",o,s){if(!n||n.length===0)return;if(n.length===1){this.insertEvent(e,n[0],r,o?.[0],s?.[0]);return}let i=n.map((c,u)=>{let l=Di("sha256").update(c.data).digest("hex").slice(0,16).toUpperCase(),d=o?.[u],f=String(d?.projectDir??c.project_dir??this._getSessionProjectDir(e)??"").trim(),m=f===""?"":ro(f),p=String(d?.source??c.attribution_source??"unknown"),h=Number(d?.confidence??c.attribution_confidence??0),g=Number.isFinite(h)?Math.max(0,Math.min(1,h)):0,y=s?.[u],_=tu(y?.bytesAvoided),b=tu(y?.bytesReturned);return{event:c,dataHash:l,projectDir:m,attributionSource:p,attributionConfidence:g,bytesAvoided:_,bytesReturned:b}}),a=this.db.transaction(()=>{let c=this.stmt(M.getEventCount).get(e).cnt;for(let u of i)this.stmt(M.checkDuplicate).get(e,Iv,u.event.type,u.dataHash)||(c>=Ov?this.stmt(M.evictLowestPriority).run(e):c++,this.stmt(M.insertEvent).run(e,u.event.type,u.event.category,u.event.priority,u.event.data,u.projectDir,u.attributionSource,u.attributionConfidence,u.bytesAvoided,u.bytesReturned,r,u.dataHash));this.stmt(M.updateMetaLastEvent).run(e)});this.withRetry(()=>a())}getEvents(e,n){let r=n?.limit??1e3,o=n?.type,s=n?.minPriority;return o&&s!==void 0?this.stmt(M.getEventsByTypeAndPriority).all(e,o,s,r):o?this.stmt(M.getEventsByType).all(e,o,r):s!==void 0?this.stmt(M.getEventsByPriority).all(e,s,r):this.stmt(M.getEvents).all(e,r)}getEventCount(e){return this.stmt(M.getEventCount).get(e).cnt}getEventBytesSummary(e){let n=this.stmt(M.getEventBytesSummary).get(e);return{bytesAvoided:Number(n?.bytes_avoided??0),bytesReturned:Number(n?.bytes_returned??0)}}getLatestAttributedProjectDir(e){return this.stmt(M.getLatestAttributedProject).get(e)?.project_dir||null}_getSessionProjectDir(e){try{return this.db.prepare("SELECT project_dir FROM session_meta WHERE session_id = ?").get(e)?.project_dir||""}catch{return""}}searchEvents(e,n,r,o){try{let s=e.replace(/[%_]/g,a=>"\\"+a),i=o??null;return this.stmt(M.searchEvents).all(r,s,s,i,i,n)}catch{return[]}}getSessionIdsForProject(e){try{let n=ro(e);return this.db.prepare(`SELECT DISTINCT session_id
              FROM session_events
